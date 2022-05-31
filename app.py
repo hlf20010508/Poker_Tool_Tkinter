@@ -118,11 +118,11 @@ class Main_Page:
 
     def set_area(self,area):
         if area==1:
-            self.area1=utils.set_rec()
+            self.area1=utils.set_rec(self.root)
         if area==2:
-            self.area2=utils.set_rec()
+            self.area2=utils.set_rec(self.root)
         if area==3:
-            self.area3=utils.set_rec()
+            self.area3=utils.set_rec(self.root)
     
     def start(self):
         self.thread1=utils.create_thread(self.area1,name='area1')
