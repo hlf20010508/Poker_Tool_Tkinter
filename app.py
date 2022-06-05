@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.font as font
 import ttkbootstrap as ttkb
 from PIL import Image,ImageTk
-import utils
+import methods
 
 main_page_bg_path='bg.png'
 
@@ -71,9 +71,8 @@ class Main_Page:
         self.area2=None
         self.area3=None
 
-        self.thread1=None
-        self.thread2=None
-        self.thread3=None
+        self.cap_thread=None
+        self.model_thread=None
 
         ttkb.Button(
             self.root,
@@ -96,6 +95,27 @@ class Main_Page:
             command=lambda: self.set_area(3)
         ).place(anchor='n',relx=0.5,rely=0.45)
 
+        self.label1=ttkb.Label(
+            self.root,
+            text='你的卡牌：',
+            bootstyle='dark'
+        )
+        self.label1.place(anchor='n',relx=0.5,rely=0.3)
+
+        self.label2=ttkb.Label(
+            self.root,
+            text='玩家1的卡牌：',
+            bootstyle='dark'
+        )
+        self.label2.place(anchor='n',relx=0.5,rely=0.4)
+
+        self.label3=ttkb.Label(
+            self.root,
+            text='玩家2的卡牌：',
+            bootstyle='dark'
+        )
+        self.label3.place(anchor='n',relx=0.5,rely=0.5)
+
         ttkb.Button(
             self.root,
             text='开始',
@@ -105,10 +125,17 @@ class Main_Page:
 
         ttkb.Button(
             self.root,
-            text='暂停',
+            text='提示',
             bootstyle='dark',
-            command=self.pause
+            command=self.tip
         ).place(anchor='n',relx=0.5,rely=0.65)
+
+        ttkb.Button(
+            self.root,
+            text='停止',
+            bootstyle='dark',
+            command=self.stop
+        ).place(anchor='n',relx=0.5,rely=0.75)
 
         self.root.protocol("WM_DELETE_WINDOW", self.exit)
         self.root.mainloop()
@@ -118,33 +145,51 @@ class Main_Page:
 
     def set_area(self,area):
         if area==1:
-            self.area1=utils.set_rec(self.root)
+            self.area1=methods.set_rec(self.root)
         if area==2:
-            self.area2=utils.set_rec(self.root)
+            self.area2=methods.set_rec(self.root)
         if area==3:
-            self.area3=utils.set_rec(self.root)
+            self.area3=methods.set_rec(self.root)
     
+    def tip(self):
+        self.cap_thread=methods.create_screen_cap_thread([self.area1,self.area2,self.area3])
+        self.cap_thread.start()
+
+        t1=open('pytorch_yolo_v5/runs/detect/exp/labels/area1.txt')
+        t2=open('pytorch_yolo_v5/runs/detect/exp/labels/area2.txt')
+        t3=open('pytorch_yolo_v5/runs/detect/exp/labels/area3.txt')
+
+        txt1=t1.read().strip().split('\n')
+        txt2=t2.read().strip().split('\n')
+        txt3=t3.read().strip().split('\n')
+
+        print(txt1,txt2,txt3)
+
+        t1.close()
+        t2.close()
+        t3.close()
+
+        dic=['3','4','5','6','7','8','9','10','J','Q','K','A','2','BJ','CJ']
+        txt1=' '.join([dic[int(i.split(' ')[0])] for i in txt1])
+        txt2=' '.join([dic[int(i.split(' ')[0])] for i in txt2])
+        txt3=' '.join([dic[int(i.split(' ')[0])] for i in txt3])
+
+        self.label1['text']=txt1
+        self.label2['text']=txt2
+        self.label3['text']=txt3
+
     def start(self):
-        self.thread1=utils.create_thread(self.area1,name='area1')
-        self.thread2=utils.create_thread(self.area2,name='area2')
-        self.thread3=utils.create_thread(self.area3,name='area3')
+        self.cap_thread=methods.create_screen_cap_thread([self.area1,self.area2,self.area3])
+        self.cap_thread.start()
+        self.model_thread=methods.create_model_thread()
+        self.model_thread.start()
 
-        self.thread1.start()
-        self.thread2.start()
-        self.thread3.start()
-
-    def pause(self):
-        self.thread1.stop()
-        self.thread2.stop()
-        self.thread3.stop()
-
-        self.thread1.join()
-        self.thread2.join()
-        self.thread3.join()
+    def stop(self):
+        self.model_thread.stop()
+        self.model_thread.join()
 
     def exit(self):
-        self.pause()
-
+        self.stop()
         self.root.destroy()
         self.root.quit()
 
