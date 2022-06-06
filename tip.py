@@ -29,8 +29,13 @@ def run(me,player1,player2):
             temp=l
             break
     output=[]
-    for i in temp:
-        rank_int=Card.get_rank_int(i)
-        r = Card.STR_RANKS[rank_int]
-        output.append(r)
-    return ', '.join(output)
+    if temp==None:
+        return '不出'
+    else:
+        for i in temp:
+            rank_int=Card.get_rank_int(i)
+            r = Card.STR_RANKS[rank_int]
+            output.append(r)
+        return ', '.join(output)
+
+print(run('4h',None,'3h'))
