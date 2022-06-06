@@ -163,16 +163,18 @@ class Main_Page:
         txt2=t2.read().strip().split('\n')
         txt3=t3.read().strip().split('\n')
 
-        print(txt1,txt2,txt3)
-
         t1.close()
         t2.close()
         t3.close()
 
         dic=['3','4','5','6','7','8','9','10','J','Q','K','A','2','BJ','CJ']
-        txt1=' '.join([dic[int(i.split(' ')[0])] for i in txt1])
-        txt2=' '.join([dic[int(i.split(' ')[0])] for i in txt2])
-        txt3=' '.join([dic[int(i.split(' ')[0])] for i in txt3])
+        txt1=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt1],reverse=True,key=lambda n: dic.index(n)))
+        txt2=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt2],reverse=True,key=lambda n: dic.index(n)))
+        txt3=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt3],reverse=True,key=lambda n: dic.index(n)))
+
+        print(txt1)
+        print(txt2)
+        print(txt3)
 
         self.label1['text']=txt1
         self.label2['text']=txt2
