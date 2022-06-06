@@ -3,6 +3,9 @@ import tkinter.font as font
 import ttkbootstrap as ttkb
 from PIL import Image,ImageTk
 import methods
+import tip
+import os
+import sys
 
 main_page_bg_path='bg.png'
 
@@ -44,37 +47,44 @@ class Main_Page:
             font=font.Font(size=20)
             ).place(anchor='n',relx=0.5,rely=0.05)
 
-        opt = [
-            ("是", 1),
-            ("否", 2)]
-        self.v = tk.IntVar()
-        self.v.set(1)
-        ttkb.Label(
-            self.root,
-            text='是否是地主',
-            bootstyle='dark'
-        ).place(anchor='n',relx=0.35,rely=0.15)
+        # opt = [
+        #     ("是", 1),
+        #     ("否", 2)]
+        # self.v = tk.IntVar()
+        # self.v.set(1)
+        # ttkb.Label(
+        #     self.root,
+        #     text='是否是地主',
+        #     bootstyle='dark'
+        # ).place(anchor='n',relx=0.35,rely=0.15)
 
-        tk.Radiobutton(
-            self.root,
-            text='是',
-            variable=self.v,
-            value=1
-            ).place(anchor='n',relx=0.5,rely=0.15)
+        # tk.Radiobutton(
+        #     self.root,
+        #     text='是',
+        #     variable=self.v,
+        #     value=1
+        #     ).place(anchor='n',relx=0.5,rely=0.15)
 
-        tk.Radiobutton(
-            self.root,
-            text='否',
-            variable=self.v,
-            value=2
-            ).place(anchor='n',relx=0.6,rely=0.15)
+        # tk.Radiobutton(
+        #     self.root,
+        #     text='否',
+        #     variable=self.v,
+        #     value=2
+        #     ).place(anchor='n',relx=0.6,rely=0.15)
         
         self.area1=None
         self.area2=None
         self.area3=None
 
-        self.model_thread=methods.create_model_thread()
-        self.model_thread.start()
+        try:
+            if sys.platform == "win32":
+                os.system('echo y|rd /s runs/detect/exp')
+            else:
+                os.system('rm -r runs/detect/exp')
+        except:
+            pass
+
+        self.model=methods.Card_Model()
 
         ttkb.Button(
             self.root,
@@ -97,33 +107,19 @@ class Main_Page:
             command=lambda: self.set_area(3)
         ).place(anchor='n',relx=0.5,rely=0.45)
 
-        self.label1=ttkb.Label(
-            self.root,
-            text='你的卡牌：',
-            bootstyle='dark'
-        )
-        self.label1.place(anchor='n',relx=0.5,rely=0.3)
-
-        self.label2=ttkb.Label(
-            self.root,
-            text='玩家1的卡牌：',
-            bootstyle='dark'
-        )
-        self.label2.place(anchor='n',relx=0.5,rely=0.4)
-
-        self.label3=ttkb.Label(
-            self.root,
-            text='玩家2的卡牌：',
-            bootstyle='dark'
-        )
-        self.label3.place(anchor='n',relx=0.5,rely=0.5)
-
         ttkb.Button(
             self.root,
             text='提示',
             bootstyle='dark',
             command=self.tip
-        ).place(anchor='n',relx=0.5,rely=0.65)
+        ).place(anchor='n',relx=0.5,rely=0.55)
+
+        self.label=ttkb.Label(
+            self.root,
+            text='结果：',
+            bootstyle='dark'
+        )
+        self.label.place(anchor='n',relx=0.5,rely=0.65)
 
         self.root.protocol("WM_DELETE_WINDOW", self.exit)
         self.root.mainloop()
@@ -140,11 +136,9 @@ class Main_Page:
             self.area3=methods.set_rec(self.root)
     
     def tip(self):
-        self.model_thread.r.rec=[self.area1,self.area2,self.area3]
+        self.model.rec=[self.area1,self.area2,self.area3]
 
-        self.model_thread.tip()
-        while not self.model_thread.r.flag_tip:
-            pass
+        self.model.tip()
 
         dic=['3','4','5','6','7','8','9','10','J','Q','K','A','2','BJ','CJ']
 
@@ -152,36 +146,43 @@ class Main_Page:
             t1=open('runs/detect/exp/labels/area1.txt')
             txt1=t1.read().strip().split('\n')
             t1.close()
-            txt1=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt1],reverse=True,key=lambda n: dic.index(n)))
+            txt1=sorted([dic[int(i.split(' ')[0])] for i in txt1],reverse=True,key=lambda n: dic.index(n))
+            for i in range(len(txt1)):
+                if not txt1[i] in ['BJ','CJ']:
+                    txt1[i]+='h'
+            txt1='-'.join(txt1)
+
         except:
-            txt1='不出'
+            txt1=None
         try:
             t2=open('runs/detect/exp/labels/area2.txt')
             txt2=t2.read().strip().split('\n')
             t2.close()
-            txt2=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt2],reverse=True,key=lambda n: dic.index(n)))
+            txt2=sorted([dic[int(i.split(' ')[0])] for i in txt2],reverse=True,key=lambda n: dic.index(n))
+            for i in range(len(txt2)):
+                if not txt2[i] in ['BJ','CJ']:
+                    txt2[i]+='h'
+            txt2='-'.join(txt2)
         except:
-            txt2='不出'
+            txt2=None
         try:
             t3=open('runs/detect/exp/labels/area3.txt')
             txt3=t3.read().strip().split('\n')
             t3.close()
-            txt3=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt3],reverse=True,key=lambda n: dic.index(n)))
+            txt3=sorted([dic[int(i.split(' ')[0])] for i in txt3],reverse=True,key=lambda n: dic.index(n))
+            for i in range(len(txt3)):
+                if not txt3[i] in ['BJ','CJ']:
+                    txt3[i]+='h'
+            txt3='-'.join(txt3)
         except:
-            txt3='不出'
+            txt3=None
 
-        self.label1['text']=txt1
-        self.label2['text']=txt2
-        self.label3['text']=txt3
+        result=tip.run(txt1,txt2,txt3)
+        self.label['text']='结果：'+result
 
         self.root.update()
 
     def exit(self):
-        try:
-            self.model_thread.stop()
-            self.model_thread.join()
-        except:
-            pass
         self.root.destroy()
         self.root.quit()
 
