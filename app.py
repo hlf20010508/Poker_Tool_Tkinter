@@ -11,6 +11,8 @@ root=style.master
 sw=root.winfo_screenwidth()//2
 sh=root.winfo_screenheight()//2
 
+root.attributes('-topmost',1)
+
 main_page_window_size=(400,600)
 
 def set_window_position(root,pos):
@@ -71,8 +73,8 @@ class Main_Page:
         self.area2=None
         self.area3=None
 
-        self.cap_thread=None
-        self.model_thread=None
+        self.model_thread=methods.create_model_thread()
+        self.model_thread.start()
 
         ttkb.Button(
             self.root,
@@ -118,24 +120,10 @@ class Main_Page:
 
         ttkb.Button(
             self.root,
-            text='开始',
-            bootstyle='dark',
-            command=self.start
-        ).place(anchor='n',relx=0.5,rely=0.55)
-
-        ttkb.Button(
-            self.root,
             text='提示',
             bootstyle='dark',
             command=self.tip
         ).place(anchor='n',relx=0.5,rely=0.65)
-
-        ttkb.Button(
-            self.root,
-            text='停止',
-            bootstyle='dark',
-            command=self.stop
-        ).place(anchor='n',relx=0.5,rely=0.75)
 
         self.root.protocol("WM_DELETE_WINDOW", self.exit)
         self.root.mainloop()
@@ -152,46 +140,48 @@ class Main_Page:
             self.area3=methods.set_rec(self.root)
     
     def tip(self):
-        self.cap_thread=methods.create_screen_cap_thread([self.area1,self.area2,self.area3])
-        self.cap_thread.start()
+        self.model_thread.r.rec=[self.area1,self.area2,self.area3]
 
-        t1=open('pytorch_yolo_v5/runs/detect/exp/labels/area1.txt')
-        t2=open('pytorch_yolo_v5/runs/detect/exp/labels/area2.txt')
-        t3=open('pytorch_yolo_v5/runs/detect/exp/labels/area3.txt')
-
-        txt1=t1.read().strip().split('\n')
-        txt2=t2.read().strip().split('\n')
-        txt3=t3.read().strip().split('\n')
-
-        t1.close()
-        t2.close()
-        t3.close()
+        self.model_thread.tip()
+        while not self.model_thread.r.flag_tip:
+            pass
 
         dic=['3','4','5','6','7','8','9','10','J','Q','K','A','2','BJ','CJ']
-        txt1=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt1],reverse=True,key=lambda n: dic.index(n)))
-        txt2=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt2],reverse=True,key=lambda n: dic.index(n)))
-        txt3=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt3],reverse=True,key=lambda n: dic.index(n)))
 
-        print(txt1)
-        print(txt2)
-        print(txt3)
+        try:
+            t1=open('runs/detect/exp/labels/area1.txt')
+            txt1=t1.read().strip().split('\n')
+            t1.close()
+            txt1=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt1],reverse=True,key=lambda n: dic.index(n)))
+        except:
+            txt1='不出'
+        try:
+            t2=open('runs/detect/exp/labels/area2.txt')
+            txt2=t2.read().strip().split('\n')
+            t2.close()
+            txt2=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt2],reverse=True,key=lambda n: dic.index(n)))
+        except:
+            txt2='不出'
+        try:
+            t3=open('runs/detect/exp/labels/area3.txt')
+            txt3=t3.read().strip().split('\n')
+            t3.close()
+            txt3=' '.join(sorted([dic[int(i.split(' ')[0])] for i in txt3],reverse=True,key=lambda n: dic.index(n)))
+        except:
+            txt3='不出'
 
         self.label1['text']=txt1
         self.label2['text']=txt2
         self.label3['text']=txt3
 
-    def start(self):
-        self.cap_thread=methods.create_screen_cap_thread([self.area1,self.area2,self.area3])
-        self.cap_thread.start()
-        self.model_thread=methods.create_model_thread()
-        self.model_thread.start()
-
-    def stop(self):
-        self.model_thread.stop()
-        self.model_thread.join()
+        self.root.update()
 
     def exit(self):
-        self.stop()
+        try:
+            self.model_thread.stop()
+            self.model_thread.join()
+        except:
+            pass
         self.root.destroy()
         self.root.quit()
 
