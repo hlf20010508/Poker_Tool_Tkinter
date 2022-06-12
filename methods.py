@@ -23,12 +23,12 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 class Card_Model:
     def __init__(
         self,
-        weights=ROOT / 'playcard_3.pt',  # model.pt path(s)
+        weights=ROOT / 'playcard.pt',  # model.pt path(s)
         source=ROOT / 'imgs',  # file/dir/URL/glob, 0 for webcam
         data=ROOT / 'mydata.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)
-        conf_thres=0.3,  # confidence threshold
-        iou_thres=0.1,  # NMS IOU threshold
+        conf_thres=0.2,  # confidence threshold
+        iou_thres=0,  # NMS IOU threshold
         max_det=1000,  # maximum detections per image
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         view_img=False,  # show results
@@ -125,6 +125,7 @@ class Card_Model:
 
                 # Process predictions
                 for i, det in enumerate(pred):  # per image
+                    
                     self.seen += 1
                     p, im0, frame = path, im0s.copy(), getattr(dataset, 'frame', 0)
 
@@ -132,6 +133,7 @@ class Card_Model:
                     save_path = str(self.save_dir / p.name)  # im.jpg
                     txt_path = str(self.save_dir / 'labels' / p.stem) + \
                         ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
+                    f=open(txt_path + '.txt', 'w')
                     s += '%gx%g ' % im.shape[2:]  # print string
                     gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
                     imc = im0.copy() if self.save_crop else im0  # for save_crop
@@ -144,8 +146,6 @@ class Card_Model:
                         for c in det[:, -1].unique():
                             n = (det[:, -1] == c).sum()  # detections per class
                             s += f"{n} {self.names[int(c)]}{'s' * (n > 1)}, "  # add to string
-
-                        f=open(txt_path + '.txt', 'w')
                         # Write results
                         for *xyxy, conf, cls in reversed(det):
                             if self.save_txt:  # Write to file

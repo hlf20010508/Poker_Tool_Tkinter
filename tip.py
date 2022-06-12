@@ -28,6 +28,8 @@ def run(me,player1,player2):
         for l in result[t]:
             temp=l
             break
+        break
+    
     output=[]
     if temp==None:
         return '不出'
@@ -36,6 +38,4 @@ def run(me,player1,player2):
             rank_int=Card.get_rank_int(i)
             r = Card.STR_RANKS[rank_int]
             output.append(r)
-        return ', '.join(output)
-
-print(run('4h',None,'3h'))
+    return ', '.join(output)
